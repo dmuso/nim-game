@@ -1,0 +1,18 @@
+version: "3.4"
+services:
+  builder:
+    build:
+      context: .
+      target: builder
+    volumes:
+      - ".:/app"
+    environment:
+      - DISPLAY=10.36.1.90
+    devices:
+      - "/dev/tty0:/dev/tty0"
+
+  app:
+    build:
+      context: .
+      target: app
+    command: /app/helpzero
