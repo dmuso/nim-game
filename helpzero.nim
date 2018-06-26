@@ -1,32 +1,28 @@
 import sdl2
+import times
+include types
+include input
 
-type SDLException = object of Exception
-
-type
-  Input {.pure.} = enum none, left, right, jump, restart, quit
-
-  Game = ref object
-    inputs: array[Input, bool]
-    renderer: RendererPtr
-
-template sdlFailIf(cond: typed, reason: string) = 
+template sdlFailIf(cond: typed, reason: string) =
   if cond: raise SDLException.newException(
     reason & ", SDL error: " & $getError())
 
-proc newGame(renderer: RendererPtr): Game = 
+proc newGame(renderer: RendererPtr): Game =
   new result
   result.renderer = renderer
 
-proc toInput(key: Scancode): Input = 
-  case key
-  of SDL_SCANCODE_A: Input.left
-  of SDL_SCANCODE_D: Input.right
-  of SDL_SCANCODE_SPACE: Input.jump
-  of SDL_SCANCODE_R: Input.restart
-  of SDL_SCANCODE_Q: Input.quit
-  else: Input.none
+proc render(game: Game, renderer: RendererPtr) =
+  # Draw over all drawings of the last frame with the default
+  # color
+  renderer.clear()
+  #Show the result on screen
+  renderer.present()
 
-proc main = 
+var
+  startTime = epochTime()
+  lastTick = 0
+
+proc main =
   sdlFailIf(not sdl2.init(INIT_VIDEO or INIT_TIMER or INIT_EVENTS)):
     "SDL initialisation failed"
 
@@ -36,7 +32,7 @@ proc main =
 
   sdlFailIf(not setHint("SDL_RENDER_SCALE_QUALITY", "2")):
     "Linear texture filtering could not be enabled"
-  
+
   let window = createWindow(title = "Our own 2D platformer",
     x = SDL_WINDOWPOS_CENTERED, y = SDL_WINDOWPOS_CENTERED,
     w = 1280, h = 720, flags = SDL_WINDOW_SHOWN)
@@ -51,33 +47,19 @@ proc main =
   # Set the default color to use for drawing
   renderer.setDrawColor(r = 110, g = 132, b = 174)
 
-  proc handleInput(game: Game) = 
-    var event = defaultEvent
-    while pollEvent(event):
-      case event.kind
-      of QuitEvent:
-        game.inputs[Input.quit] = true
-      of KeyDown:
-        game.inputs[event.key.keysym.scancode.toInput] = true
-      of KeyUp:
-        game.inputs[event.key.keysym.scancode.toInput] = false
-      else:
-        discard
-
-  proc render(game: Game) = 
-    # Draw over all drawings of the last frame with the default
-    # color
-    renderer.clear()
-    #Show the result on screen
-    renderer.present()     
-
   var game = newGame(renderer)
-
 
   # Game loop, draws each frame
   while not game.inputs[Input.quit]:
     game.handleInput()
-    game.render()
+
+    let newTick = int((epochTime() - startTime) * 50)
+    for tick in lastTick + 1 .. newTick:
+      echo tick
+      # game.physics()
+    lastTick = newTick
+
+    game.render(renderer)
 
 
 main()
