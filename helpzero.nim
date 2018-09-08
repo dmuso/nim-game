@@ -2,6 +2,7 @@ import sdl2
 import times
 include types
 include input
+include player
 
 template sdlFailIf(cond: typed, reason: string) =
   if cond: raise SDLException.newException(
@@ -10,11 +11,14 @@ template sdlFailIf(cond: typed, reason: string) =
 proc newGame(renderer: RendererPtr): Game =
   new result
   result.renderer = renderer
+  result.player = newPlayer(renderer.loadTexture("player.png"))
 
 proc render(game: Game, renderer: RendererPtr) =
   # Draw over all drawings of the last frame with the default
   # color
   renderer.clear()
+  # Actual drawing here
+  game.renderer.renderTee(game.player.texture, game.player.pos - game.camera)
   #Show the result on screen
   renderer.present()
 

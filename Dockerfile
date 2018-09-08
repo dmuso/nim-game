@@ -4,7 +4,7 @@ RUN apk update
 RUN apk add sdl2 sdl2-dev
 RUN apk add libcrypto1.0 libssl1.0
 
-RUN nimble install -y sdl2 strfmt
+RUN nimble install -y sdl2 strfmt basic2d
 
 WORKDIR /app
 COPY . .
